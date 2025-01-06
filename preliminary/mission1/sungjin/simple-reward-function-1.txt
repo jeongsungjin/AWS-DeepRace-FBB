@@ -2,17 +2,17 @@ Gradient descent batch size 64
 Entropy 0.01
 Discount factor 0.90
 Loss type Huber
-Learning rate 0.0008
+Learning rate 0.0005
 Number of experience episodes between each policy-updating iteration 20
 Number of epochs 10
 
 1
-00:43.579
+00:43.218
 --
 2
-00:47.201
+00:41.610
 --
 3
-00:40.270
+00:44.198
 
-2:10
+2:08
