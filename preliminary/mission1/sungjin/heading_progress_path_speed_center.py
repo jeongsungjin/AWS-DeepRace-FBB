@@ -121,6 +121,8 @@ def reward_function(params):
     car_speed = params['speed']
     car_heading = params['heading']
     progress = params['progress']
+    track_width = params['track_width']
+    distance_from_center = params['distance_from_center']
 
     # 트랙 안에 있는지 확인
     if not params['all_wheels_on_track']:
@@ -149,16 +151,24 @@ def reward_function(params):
     # 보상 계산
     reward = 1.0  # 기본 보상
     
-    # reward += progress * 0.2
+    reward += progress * 0.07
 
     # 헤딩 차이가 작을수록 높은 보상 (최대 보상 1, 오차 클수록 0에 가까움)
     heading_reward = max(0.0, 1 - (heading_difference / 30.0))  # 30도 이상이면 페널티
-    reward += heading_reward * 5  
+    reward += heading_reward * 3
     
     # 속도 차이가 작을수록 높은 보상
     speed_reward = max(0.0, 1 - (speed_difference / target_speed))  # 속도 오차 보상
-    reward += speed_reward * 3.5  
+    reward += speed_reward * 2.5 
     
+    maker = track_width * 0.2
+    if distance_from_center <= maker:
+        reward += 1.0
+    else:
+        reward *= 0.5
+    
+    reward += progress * 0.07
+
     return float(reward)
 
 
