@@ -1,0 +1,15 @@
+Hyperparameter
+Gradient descent batch size:64
+Entropy:0.01
+Discount factor:0.96
+Loss type:Huber
+Learning rate:0.0003
+Number of experience episodes between each policy-updating iteration:20
+Number of epochs:10
+___
+lap1 35s 6out
+lap2 42s 7out
+lap3 33s 5out
+___
+lap3에서 덜나가는게 보임.
+training하는거 지켜봣는데 중간중간, 1시간~1시간30분까지는 학습 잘되고 루트도 효율적으로 잘 따는데 그 이후로는 학습에 진전이 없음. 왤까?
