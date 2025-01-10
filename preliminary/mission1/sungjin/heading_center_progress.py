@@ -126,66 +126,44 @@ def _get_closest_reference_index(x, y):
     return closest_idx, min_dist
 
 def reward_function(params):
-    # DeepRacer에서 제공되는 주요 파라미터
     x = params.get('x')                     # 현재 차량 x좌표
     y = params.get('y')                     # 현재 차량 y좌표
     heading = params.get('heading', 0.0)    # 현재 차량 헤딩(각도, 0~360)
     speed = params.get('speed', 0.0)        # 차량 속도
     steering = params.get('steering_angle', 0.0)  # -30(왼) ~ +30(오)
+    track_width = params['track_width']
+    distance_from_center = params['distance_from_center']
+    progress = params['progress']
 
-    # 트랙 너비나 거리 기반 보상을 추가하고 싶다면 params['track_width'], params['distance_from_center'] 등 활용
+    if not params['all_wheels_on_track']:
+        return 1e-4  # 트랙 이탈 시 최소 보상
 
-    # 기본 보상값
     reward = 0.0
 
-    # 1) 레퍼런스 경로에서 가장 가까운 점 찾기
     closest_idx, min_dist = _get_closest_reference_index(x, y)
 
-    # 2) 다음 점(혹은 그 다음 점) 인덱스
     next_idx = (closest_idx + 1) % len(REFERENCE_PATH)
     ref_x, ref_y = REFERENCE_PATH[closest_idx]
     ref_next_x, ref_next_y = REFERENCE_PATH[next_idx]
 
-    # 3) 레퍼런스 경로를 따라갈 때 기대되는 진행 방향(헤딩) 계산
     ref_heading_rad = math.atan2(ref_next_y - ref_y, ref_next_x - ref_x)
     ref_heading_deg = math.degrees(ref_heading_rad)
     
-    # DeepRacer heading, ref_heading_deg은 [0..360], 차이 계산
     heading_diff = abs(ref_heading_deg - heading)
     if heading_diff > 180:
         heading_diff = 360 - heading_diff
 
-    MAX_DIST = 1.0
-    dist_reward = max(0.0, 1.0 - (min_dist / MAX_DIST))  # min_dist == 0 -> dist_reward=1, min_dist>=1 -> 0
 
-    DIRECTION_THRESHOLD = 10.0  # 10도 이내면 높은 보상
+    DIRECTION_THRESHOLD = 10.0  
     if heading_diff < DIRECTION_THRESHOLD:
-        heading_reward = 1.0
+        reward = min((1.5 / heading_diff), 2)
+
+    maker = track_width * 0.3
+    if distance_from_center <= maker:
+        reward += 1.5
     else:
-        # (heading_diff / 50) 같은 식으로 점차 줄이거나 등등
-        heading_reward = max(0.0, 1.0 - (heading_diff / 50.0))
-
-    # 6) 속도 보상 (예시: 2~3 m/s 권장)
-    OPTIMAL_SPEED_MIN = 2.0
-    OPTIMAL_SPEED_MAX = 3.0
-    if OPTIMAL_SPEED_MIN <= speed <= OPTIMAL_SPEED_MAX:
-        speed_reward = 1.0
-    else:
-        # 권장 범위를 벗어날수록 보상을 깎는다
-        speed_center = (OPTIMAL_SPEED_MIN + OPTIMAL_SPEED_MAX) / 2
-        speed_diff = abs(speed - speed_center)
-        speed_reward = max(0.0, 1.0 - (speed_diff / 5.0))
-
-    # 7) 종합 보상 (가중치)
-    w_dist = 0.4
-    w_head = 0.3
-    w_spd  = 0.3
-
-    reward = (w_dist * dist_reward) + (w_head * heading_reward) + (w_spd * speed_reward)
-
-    # 8) 혹은 스티어링 각도에 대한 패널티 등 추가 가능
-    #    예: 스티어링 각도가 극단적이면(±30) 보상 감소
-    if abs(steering) > 25:
-        reward *= 0.8  # 살짝 깎기
+        reward *= 0.5
+    
+    reward += progress * 0.07
 
     return float(reward)
