@@ -1,0 +1,56 @@
+Hyperparameter
+3rd
+Gradient descent batch size
+64
+Entropy
+0.005
+Discount factor
+0.98
+Loss type
+Huber
+Learning rate
+0.0001
+Number of experience episodes between each policy-updating iteration
+20
+Number of epochs
+10
+___
+2nd
+Gradient descent batch size
+64
+Entropy
+0.005
+Discount factor
+0.98
+Loss type
+Huber
+Learning rate
+0.0001
+Number of experience episodes between each policy-updating iteration
+20
+Number of epochs
+10
+___
+1st
+Gradient descent batch size
+64
+Entropy
+0.01
+Discount factor
+0.98
+Loss type
+Huber
+Learning rate
+0.0003
+Number of experience episodes between each policy-updating iteration
+20
+Number of epochs
+10
+___
+best laptime
+1st : 25s, 1out (생존률 낮고 랩타임도 잘 안나옴)
+2nd: 23.0s, 0out (생존률 많이 높아졌고 랩타임 큰변동 x)
+3rd: 21.6s, 0out (생존률은 일정이상 높게 수렴한듯, 랩타임 줄음)
+___
+의견: 중앙선따라가는 보상을 좀 낮추고 progress/steps 보상 높여서 다시 학습하면 좀 더 랩타임 줄지 않을까?
+의견: 최적경로로 보상을 주면 습.. 보정을 좀 많이해야될듯
