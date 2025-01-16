@@ -1,0 +1,22 @@
+Hyperparameter
+1st (1.5h)
+Gradient descent batch size 64
+Entropy 0.01
+Discount factor 0.98
+Loss type Mean squared error
+Learning rate 0.0003
+Number of experience episodes between each policy-updating iteration 20
+Number of epochs 10
+__
+2nd, 3rd (1.5h, 1.5h)
+Gradient descent batch size 64
+Entropy 0.01
+Discount factor 0.98
+Loss type Huber
+Learning rate 0.00015
+Number of experience episodes between each policy-updating iteration 20
+Number of epochs 10
+___
+1st : 14.065s, 안정성 낮음, progress/steps : 0.5
+2nd : 13.340s, 안정성 크게향상, progress/steps : 1
+3rd : 13.666s, 안정성 확보, 기록단축X, progress/steps : 1.2
