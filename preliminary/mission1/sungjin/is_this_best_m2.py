@@ -16,7 +16,7 @@ def reward_function(params):
     else:
         reward += 0.1  # 바깥쪽은 보상 감소
     
-    # 진행률 기반 보상 세분화
+    # 진행률 기반 보상 세분화, 이거 필요한지?
     if progress >= 90:  # 트랙의 마지막 10%
         reward += 2.0  # 완주를 유도하는 높은 보상
     elif progress >= 50:

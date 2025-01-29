@@ -1,5 +1,6 @@
 import math
 
+# 최적화된 waypoint들 (x, y, speed)
 waypoints_opt = [[0.25792, 0.86332, 4.0],
                 [0.11893, 1.01891, 4.0],
                 [-0.01874, 1.17284, 4.0],
@@ -113,103 +114,108 @@ waypoints_opt = [[0.25792, 0.86332, 4.0],
                 [0.56319, 0.52056, 4.0],
                 [0.40447, 0.69893, 4.0]]
 
-def closest_optimal_waypoint(agent_x, agent_y, agent_heading):
-    closest_waypoints = []
-    for i, waypoint in enumerate(waypoints_opt):
-        wp_x, wp_y, _ = waypoint
-        distance = math.sqrt((wp_x - agent_x) ** 2 + (wp_y - agent_y) ** 2)
-        closest_waypoints.append((i, waypoint, distance))
 
-    # 거리 기준으로 상위 5개 웨이포인트 선택
-    closest_waypoints = sorted(closest_waypoints, key=lambda x: x[2])[:5]
+def closest_two_optimal_waypoint(agent_x, agent_y): # 에이전트와 가장 가까운 최적화 waypoint 두개 반환
+    distances = []
+    # waypoint들 
+    for waypoint in waypoints_opt:
+        wp_x, wp_y = waypoint[0], waypoint[1]
+        distance = math.sqrt((wp_x-agent_x)**2+(wp_y-agent_y)**2)
+        distances.append([waypoint, distance])
 
-    # 진행 방향과 가장 일치하는 웨이포인트 선택
-    best_waypoint = None
-    smallest_heading_diff = float('inf')
+    distances.sort(key=lambda x:x[1])
+    return [distances[0][0], distances[1][0]]
 
-    for idx, waypoint, _ in closest_waypoints:
-        wp_x, wp_y, _ = waypoint
-        wp_heading = math.degrees(math.atan2(wp_y - agent_y, wp_x - agent_x))
-        heading_diff = abs((wp_heading - agent_heading + 180) % 360 - 180)  # 0~180도 제한
 
-        if heading_diff < smallest_heading_diff:
-            smallest_heading_diff = heading_diff
-            best_waypoint = waypoint
-            best_idx = idx
+def distance_from_optimal_path(agent_x, agent_y): # 가장 가까운 waypoint 두개를 이은 직선과 에이전트와의 거리 반환
+    waypoint1, waypoint2 = closest_two_optimal_waypoint(agent_x, agent_y)
+    wp1_x, wp1_y = waypoint1[0], waypoint1[1]
+    wp2_x, wp2_y = waypoint2[0], waypoint2[1]
+    
+    # 벡터 계산 (wp1 -> wp2 방향 벡터)
+    dx, dy = wp2_x - wp1_x, wp2_y - wp1_y
+    
+    # 직선 방정식 y = mx + b
+    if dx == 0:  # 수직선의 경우
+        return abs(agent_x - wp1_x)
+    
+    m = dy / dx
+    b = wp1_y - m * wp1_x
 
-    # 다음 웨이포인트 참고
-    next_wp_idx = (best_idx + 1) % len(waypoints_opt)
-    next_wp = waypoints_opt[next_wp_idx]
+    # 에이전트의 위치에서 직선까지의 수직 거리
+    distance = abs(m * agent_x - agent_y + b) / math.sqrt(m**2 + 1)
+    
+    return distance
 
-    return best_waypoint, next_wp
 
-def calculate_curvature(waypoint, next_waypoint, prev_waypoint):
-    x1, y1, _ = prev_waypoint
-    x2, y2, _ = waypoint
-    x3, y3, _ = next_waypoint
+def get_reward_path(agent_x, agent_y): # distance_from_optimal_path로 얻은 거리가 작을수록 큰 보상 리턴 (보상범위 : 0.001 ~ 1.0)
+    distance = distance_from_optimal_path(agent_x, agent_y)
 
-    # 벡터 길이
-    a = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    b = math.sqrt((x3 - x2)**2 + (y3 - y2)**2)
-    c = math.sqrt((x3 - x1)**2 + (y3 - y1)**2)
+    # reward = max(1e-3, 1-(distance/0.5))
+    reward = max(0.1, math.exp(-distance / 0.7))
+    
+    return float(reward)
 
-    # 곡률 계산 (삼각형 외접원의 반지름의 역수)
-    if a * b * c == 0:
-        return 0  # 직선 구간 (곡률 없음)
-    curvature = abs((4 * (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) / (a * b * c))
-    return curvature
+def get_reward_living(params):
+    distance_from_center = params['distance_from_center']
+    track_width = params['track_width']
+    reward = 1e-3
+
+    marker1 = track_width * 0.45
+    marker2 = track_width * 0.5
+    if distance_from_center < marker1:
+        reward = 1.0
+    elif distance_from_center < marker2:
+        reward = 0.5
+    else:
+        reward = 1e-3
+
+    return reward
+
+
+def get_reward_speed_steering(params):
+    straight_zone = [[0,13],[26,35],[67,77],[89,100]]
+    progress = params['progress']
+    speed = params['speed']
+    steering = params['steering_angle'] # 왼쪽이 양수
+
+    if progress<=12 or 26<=progress<=35 or 67<=progress<=77 or 89<=progress: #직진구역
+        if 3.0 <= speed:
+            reward_speed = 1.0
+        else:
+            reward_speed = 0.1
+
+        if abs(steering) < 15:
+            reward_steering = 1.0
+        else:
+            reward_steering = 0.1
+    else:
+        if 1.5 <= speed <= 2.5:
+            reward_speed = 1.0
+        else:
+            reward_speed = 0.1
+        
+        if 0 < abs(steering):
+            reward_steering = 1.0
+        else:
+            reward_steering = 0.1
+    
+    reward = 0.6*reward_speed + 0.4*reward_steering
+    return float(reward)
+
 
 def reward_function(params):
-    # 입력 파라미터
+    heading = params['heading']
     agent_x = params['x']
     agent_y = params['y']
-    agent_speed = params['speed']
     progress = params['progress']
-    all_wheels_on_track = params['all_wheels_on_track']
-    steering_angle = params['steering_angle']
-    track_width = params['track_width']
-    distance_from_center = params['distance_from_center']
-    agent_heading = params['heading']
-    is_left_of_center = params['is_left_of_center']
+    steps = params['steps']
 
-    # 기본 보상 값
-    reward = 1e-3  # 기본 보상
+    reward_speed_steering = get_reward_speed_steering(params)
+    reward_living = get_reward_living(params)
+    reward_path = get_reward_path(agent_x,agent_y)
 
-    if not all_wheels_on_track:
-        return 1e-4  # 트랙 이탈 시 최소 보상
+    reward_progress = progress/steps/100
 
-    # 최적 웨이포인트 찾기 (개선된 방식)
-    closest_wp, next_wp = closest_optimal_waypoint(agent_x, agent_y, agent_heading)
-    best_idx = waypoints_opt.index(closest_wp)
-    prev_wp = waypoints_opt[(best_idx - 1) % len(waypoints_opt)]
-    wp_x, wp_y, optimal_speed = closest_wp
-
-    curvature = calculate_curvature(closest_wp, next_wp, prev_wp)
-    if curvature > 0.1:  # 급커브
-        if optimal_speed * 0.8 <= agent_speed <= optimal_speed:
-            reward += 1.0  # 급커브에서 적정 속도 유지 보상
-    else:  # 직선 구간
-        if optimal_speed * 0.9 <= agent_speed <= optimal_speed * 1.1:
-            reward += 1.0  # 직선 구간에서 적정 속도 유지 보상
-
-    # 웨이포인트 방향과 차량 헤딩 비교
-    wp_heading = math.degrees(math.atan2(wp_y - agent_y, wp_x - agent_x))
-    heading_diff = abs((wp_heading - agent_heading + 180) % 360 - 180)  # 0~180도로 제한
-    heading_reward = max(0.1, 1 - (heading_diff / 30))  # 30도 이상 차이에서 보상 감소
-    reward += heading_reward
-
-    # 트랙 중앙 유지 보상
-    if distance_from_center < 0.35 * track_width:
-        reward += 1.2
-    else:
-        reward += 0.1  # 바깥쪽은 보상 감소
-
-    # 진행률 기반 보상 세분화
-    if progress >= 80:  # 트랙의 마지막 10%
-        reward += 2.0  # 완주를 유도하는 높은 보상
-    elif progress >= 50:
-        reward += 1.0
-    else:
-        reward += 0.5  # 초기 구간에서는 상대적으로 낮은 보상
-
+    reward = 1.0*reward_path + 1.0*reward_living + 0.8*reward_speed_steering + 0.0*reward_progress
     return float(reward)

@@ -113,6 +113,7 @@ waypoints_opt = [[0.25792, 0.86332, 4.0],
                 [0.56319, 0.52056, 4.0],
                 [0.40447, 0.69893, 4.0]]
 
+
 def closest_optimal_waypoint(agent_x, agent_y, agent_heading):
     closest_waypoints = []
     for i, waypoint in enumerate(waypoints_opt):
@@ -143,21 +144,6 @@ def closest_optimal_waypoint(agent_x, agent_y, agent_heading):
 
     return best_waypoint, next_wp
 
-def calculate_curvature(waypoint, next_waypoint, prev_waypoint):
-    x1, y1, _ = prev_waypoint
-    x2, y2, _ = waypoint
-    x3, y3, _ = next_waypoint
-
-    # 벡터 길이
-    a = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    b = math.sqrt((x3 - x2)**2 + (y3 - y2)**2)
-    c = math.sqrt((x3 - x1)**2 + (y3 - y1)**2)
-
-    # 곡률 계산 (삼각형 외접원의 반지름의 역수)
-    if a * b * c == 0:
-        return 0  # 직선 구간 (곡률 없음)
-    curvature = abs((4 * (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) / (a * b * c))
-    return curvature
 
 def reward_function(params):
     # 입력 파라미터
@@ -175,22 +161,11 @@ def reward_function(params):
     # 기본 보상 값
     reward = 1e-3  # 기본 보상
 
-    if not all_wheels_on_track:
-        return 1e-4  # 트랙 이탈 시 최소 보상
-
     # 최적 웨이포인트 찾기 (개선된 방식)
     closest_wp, next_wp = closest_optimal_waypoint(agent_x, agent_y, agent_heading)
     best_idx = waypoints_opt.index(closest_wp)
     prev_wp = waypoints_opt[(best_idx - 1) % len(waypoints_opt)]
     wp_x, wp_y, optimal_speed = closest_wp
-
-    curvature = calculate_curvature(closest_wp, next_wp, prev_wp)
-    if curvature > 0.1:  # 급커브
-        if optimal_speed * 0.8 <= agent_speed <= optimal_speed:
-            reward += 1.0  # 급커브에서 적정 속도 유지 보상
-    else:  # 직선 구간
-        if optimal_speed * 0.9 <= agent_speed <= optimal_speed * 1.1:
-            reward += 1.0  # 직선 구간에서 적정 속도 유지 보상
 
     # 웨이포인트 방향과 차량 헤딩 비교
     wp_heading = math.degrees(math.atan2(wp_y - agent_y, wp_x - agent_x))
@@ -198,18 +173,33 @@ def reward_function(params):
     heading_reward = max(0.1, 1 - (heading_diff / 30))  # 30도 이상 차이에서 보상 감소
     reward += heading_reward
 
+    
+    if 0.8 * optimal_speed <= agent_speed <= 1.2 * optimal_speed:
+        reward += 1.0
+    else:
+        reward += 0.1
+    
     # 트랙 중앙 유지 보상
     if distance_from_center < 0.35 * track_width:
         reward += 1.2
     else:
         reward += 0.1  # 바깥쪽은 보상 감소
 
-    # 진행률 기반 보상 세분화
-    if progress >= 80:  # 트랙의 마지막 10%
-        reward += 2.0  # 완주를 유도하는 높은 보상
-    elif progress >= 50:
-        reward += 1.0
-    else:
-        reward += 0.5  # 초기 구간에서는 상대적으로 낮은 보상
+    if (11.0 <= progress <= 16.5) or (38.0 <= progress <= 48.1) or (76.0 <= progress <= 84.3):
+        if is_left_of_center == True:
+            reward += 1.0
+        else:
+            reward += 0.1
+    elif (62.0 <= progress <= 69.6):
+        if is_left_of_center == False:
+            reward += 1.0
+        else:
+            reward += 0.1
+    else: # 인코스 팔 필요 없는 구간
+        if all_wheels_on_track == True:
+            reward += 1.0
+        else:
+            reward += 0.3
+    
 
     return float(reward)
