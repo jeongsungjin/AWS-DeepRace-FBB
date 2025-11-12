@@ -13,13 +13,13 @@
 
 ## 대회 포스터
 <p align="center">
-  <img width="419" height="599" alt="poster" src="https://github.com/user-attachments/assets/881829d5-9f6a-45be-95c2-eda5ab5d6232" />
+  <img src="https://github.com/user-attachments/assets/1c58dae0-855d-4b4b-900a-ea6004cae19f" width="420" alt="poster"/>
 </p>
 
 ## 대회 성적
-<p align="center">
-  <b>예선</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>본선</b><br/><br/>
-  <img src="https://github.com/user-attachments/assets/9d42884a-4618-4aef-82f0-08504c9a5d05" width="45%" style="vertical-align: top;"/>
-  &nbsp;&nbsp;&nbsp;
-  <img src="https://github.com/user-attachments/assets/f237d582-a002-4a75-acf2-0ce73edb3ee3" width="45%" style="vertical-align: top;"/>
-</p>
+<p align="center"><b>예선</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>본선</b></p>
+
+<div align="center" style="display:flex; justify-content:center; align-items:flex-start; gap:20px;">
+  <img src="https://github.com/user-attachments/assets/9d42884a-4618-4aef-82f0-08504c9a5d05" width="45%" alt="예선 결과"/>
+  <img src="https://github.com/user-attachments/assets/f237d582-a002-4a75-acf2-0ce73edb3ee3" width="45%" alt="본선 결과"/>
+</div>
