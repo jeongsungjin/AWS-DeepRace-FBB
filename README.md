@@ -17,9 +17,7 @@
 </p>
 
 ## 대회 성적
-<p align="center"><b>예선</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>본선</b></p>
 
-<div align="center" style="display:flex; justify-content:center; align-items:flex-start; gap:20px;">
-  <img src="https://github.com/user-attachments/assets/9d42884a-4618-4aef-82f0-08504c9a5d05" width="45%" alt="예선 결과"/>
-  <img src="https://github.com/user-attachments/assets/f237d582-a002-4a75-acf2-0ce73edb3ee3" width="45%" alt="본선 결과"/>
-</div>
+| 예선 | 본선 |
+|:--:|:--:|
+| <img src="https://github.com/user-attachments/assets/9d42884a-4618-4aef-82f0-08504c9a5d05" width="95%" alt="예선 결과"/> | <img src="https://github.com/user-attachments/assets/f237d582-a002-4a75-acf2-0ce73edb3ee3" width="95%" alt="본선 결과"/> |
